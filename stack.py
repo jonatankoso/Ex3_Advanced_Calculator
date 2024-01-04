@@ -42,3 +42,20 @@ class Stack:
 
         else:
             return "Empty Stack"
+
+
+def prec(c):
+    if c == '+' or c == '-':
+        return 1
+    elif c == '/' or c == '*':
+        return 2
+    elif c == '^':
+        return 3
+    elif c == '%':
+        return 4
+    elif c == '@' or c == '&' or c == '$':
+        return 5
+    elif c == '~' or c == '!':
+        return 6
+    else:
+        return -1
