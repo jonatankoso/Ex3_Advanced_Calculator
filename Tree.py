@@ -6,7 +6,7 @@ class node:
         self.operator = False
 
 
-def evaluate(node) -> int:
+def evaluate(node):
     '''
     function receives a node of the syntax tree and recursively evaluates it
     :return: result of evaluation
@@ -28,3 +28,22 @@ def evaluate(node) -> int:
         return left_value * right_value
     elif node.value == '/':
         return left_value // right_value
+    elif node.value == '^':
+        return right_value ** left_value
+    elif node.value == '@':
+        return float(right_value + left_value) / 2.0
+    elif node.value == '$':
+        return max(right_value, left_value)
+    elif node.value == '&':
+        return min(right_value, left_value)
+    elif node.value == '%':
+        return right_value % left_value
+    elif node.value == '~':
+        return right_value * -1
+    elif node.value == '!':
+        result = 1
+        for idx in range(1, left_value + 1):
+            result *= idx
+        return result
+    else:
+        raise ValueError("Unknown operator")
