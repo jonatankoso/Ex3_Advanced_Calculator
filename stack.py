@@ -59,3 +59,49 @@ def prec(c):
         return 6
     else:
         return -1
+
+
+def associativity(c):
+    if c == '^':
+        return 'R'
+    return 'L'  # Default to left-associative
+
+
+def infix_to_postfix(s):
+    post = []
+    stack = []
+
+    for i in range(len(s)):
+        c = s[i]
+
+        # If the encountered character is an operand, add it to the output string
+        if ('a' <= c <= 'z') or ('A' <= c <= 'Z') or ('0' <= c <= '9'):
+            post.append(c)
+        # If the encountered character is an ‘(‘, push it to the stack
+        elif c == '(':
+            stack.append(c)
+        # If the encountered character is an ‘)’, pop and add to the output string from the stack
+        # until an ‘(‘ is encountered
+        elif c == ')':
+            while stack and stack[-1] != '(':
+                post.append(stack.pop())
+            stack.pop()  # Pop '('
+        # If an operator is encountered
+        else:
+            while stack and (prec(s[i]) < prec(stack[-1]) or
+                             (prec(s[i]) == prec(stack[-1]) and associativity(s[i]) == 'L')):
+                post.append(stack.pop())
+            stack.append(c)
+
+    # Pop all the remaining elements from the stack
+    while stack:
+        post.append(stack.pop())
+
+    return ''.join(post)
+
+
+# Driver code
+exp = "5-3!"
+
+# Function call
+print(infix_to_postfix(exp))
