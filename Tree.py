@@ -3,7 +3,6 @@ class node:
         self.left = None
         self.value = value
         self.right = None
-        self.operator = False
 
 
 def evaluate(node):
@@ -29,10 +28,14 @@ def evaluate(node):
 
     if node.left and not node.right:
         if node.value == '!':
-            result = 1
-            for idx in range(1, left_value + 1):
-                result *= idx
-            return result
+            if left_value >= 0:
+                result = 1
+                for idx in range(1, left_value + 1):
+                    result *= idx
+                return result
+            else:
+                raise ValueError("! is an operation on natural numbers")
+
 
     if node.left and node.right:
         if node.value == '+':
