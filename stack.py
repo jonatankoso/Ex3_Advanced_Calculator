@@ -61,12 +61,6 @@ def prec(c):
         return -1
 
 
-def associativity(c):
-    if c == '^':
-        return 'R'
-    return 'L'  # Default to left-associative
-
-
 def infix_to_postfix(s):
     post = []
     stack = []
@@ -88,8 +82,7 @@ def infix_to_postfix(s):
             stack.pop()  # Pop '('
         # If an operator is encountered
         else:
-            while stack and (prec(s[i]) < prec(stack[-1]) or
-                             (prec(s[i]) == prec(stack[-1]) and associativity(s[i]) == 'L')):
+            while stack and (prec(s[i]) <= prec(stack[-1])):
                 post.append(stack.pop())
             stack.append(c)
 
