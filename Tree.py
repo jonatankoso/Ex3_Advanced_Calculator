@@ -58,3 +58,29 @@ def evaluate(node):
             return right_value % left_value
         else:
             raise ValueError("Wrong sons to operator")
+
+
+def constructTree(postfix):
+    stack = []
+    for char in postfix:
+        t = node(char)
+        if char in "+*/^$&%@":
+            t1 = stack.pop()
+            t2 = stack.pop()
+            t.right = t1
+            t.left = t2
+        elif char == '!':
+            t.left = stack.pop()
+        elif char == '~':
+            t.right = stack.pop()
+        elif char == '-':
+            if postfix.index(char) == 1:
+                t.right = stack.pop()
+            else:
+                t1 = stack.pop()
+                t2 = stack.pop()
+                t.right = t1
+                t.left = t2
+        stack.append(t)
+    t = stack.pop()
+    return t
