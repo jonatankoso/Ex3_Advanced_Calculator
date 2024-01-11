@@ -22,19 +22,19 @@ def evaluate(node):
 
     # Perform operation based on the operator this node represents
 
-    if node.right and not node.left:
-        if node.value == '~':
-            return right_value * -1
+    #if node.right and not node.left:
+    #    if node.value == '~':
+    #        return right_value * -1
 
-    if node.left and not node.right:
-        if node.value == '!':
-            if left_value >= 0:
-                result = 1
-                for idx in range(1, left_value + 1):
-                    result *= idx
-                return result
-            else:
-                raise ValueError("! is an operation on natural numbers")
+    #if node.left and not node.right:
+    #    if node.value == '!':
+    #        if left_value >= 0:
+    #            result = 1
+    #            for idx in range(1, left_value + 1):
+    #                result *= idx
+    #            return result
+    #        else:
+    #            raise ValueError("! is an operation on natural numbers")
 
 
     if node.left and node.right:
@@ -69,10 +69,10 @@ def constructTree(postfix):
             t2 = stack.pop()
             t.right = t1
             t.left = t2
-        elif char == '!':
-            t.left = stack.pop()
-        elif char == '~':
-            t.right = stack.pop()
+        #elif char == '!':
+        #    t.left = stack.pop()
+        #elif char == '~':
+        #    t.right = stack.pop()
         elif char == '-':
             if postfix.index(char) == 1:
                 t.right = stack.pop()
@@ -84,3 +84,52 @@ def constructTree(postfix):
         stack.append(t)
     t = stack.pop()
     return t
+
+def constructTreeFromInfix(infix):
+    prec = {'(': 1, '+': 2, '-': 2, '*': 3, '/': 3}
+    op_queue = []
+    node_stack = []
+    for token in infix:
+        if token == '(':
+            op_queue.insert(0,token)
+        elif token.isdigit():
+            node_stack.insert(0,node(token))
+        elif token == ')':
+            while not op_queue[0] == '(':
+                root = node(op_queue[0])
+                del op_queue[0]
+                root.right = node_stack[0]
+                del node_stack[0]
+                root.left = node_stack[0]
+                del node_stack[0]
+                node_stack.insert(0,root)
+
+            del op_queue[0]
+
+        else:
+            while len(op_queue) > 0 and prec[op_queue[0]] >= prec[token]:
+                root = node(op_queue[0])
+                del op_queue[0]
+                root.right = node_stack[0]
+                del node_stack[0]
+                root.left = node_stack[0]
+                del node_stack[0]
+                node_stack.insert(0, root)
+
+            op_queue.insert(0,token)
+
+    while len(node_stack) > 1:
+        root = node(op_queue[0])
+        del op_queue[0]
+        root.right = node_stack[0]
+        del node_stack[0]
+        root.left = node_stack[0]
+        del node_stack[0]
+        node_stack.insert(0, root)
+
+    return node_stack[0]
+
+
+exp = "5+5+5+5-5"
+ans = constructTreeFromInfix(exp)
+print(evaluate(ans))
