@@ -1,6 +1,3 @@
-import shlex
-
-
 class node:
     def __init__(self, value):
         self.left = None
@@ -18,6 +15,7 @@ def evaluate(node):
         return float(node.value)
 
     # else evaluate the left and right subtrees
+
     if node.left:
         left_value = evaluate(node.left)
     if node.right:
@@ -25,11 +23,11 @@ def evaluate(node):
 
     # Perform operation based on the operator this node represents
 
-    #if node.right and not node.left:
+    # if node.right and not node.left:
     #    if node.value == '~':
     #        return right_value * -1
 
-    #if node.left and not node.right:
+    # if node.left and not node.right:
     #    if node.value == '!':
     #        if left_value >= 0:
     #            result = 1
@@ -38,7 +36,6 @@ def evaluate(node):
     #            return result
     #        else:
     #            raise ValueError("! is an operation on natural numbers")
-
 
     if node.left and node.right:
         if node.value == '+':
@@ -72,9 +69,9 @@ def constructTree(postfix):
             t2 = stack.pop()
             t.right = t1
             t.left = t2
-        #elif char == '!':
+        # elif char == '!':
         #    t.left = stack.pop()
-        #elif char == '~':
+        # elif char == '~':
         #    t.right = stack.pop()
         elif char == '-':
             if postfix.index(char) == 1:
@@ -88,57 +85,80 @@ def constructTree(postfix):
     t = stack.pop()
     return t
 
+
 def constructTreeFromInfix(infix):
-    prec = {'(': 1, '+': 2, '-': 2, '*': 3, '/': 3, '^':4, '%':5, '@': 6, '$': 6, '&': 6}
+    prec = {'(': 1, '+': 2, '-': 2, '*': 3, '/': 3, '^': 4, '%': 5, '@': 6, '$': 6, '&': 6}
     op_queue = []
     node_stack = []
-    lexer = shlex.shlex(infix)
-    tokenList = []
-
-    for token in lexer:
-        tokenList.append(str(token))
+    tokenList = strToList(infix)
     print(tokenList)
-
     for token in tokenList:
         if token == '(':
-            op_queue.insert(0,token)
+            op_queue.insert(0, token)
         elif token.isdigit():
-            node_stack.insert(0,node(token))
+            node_stack.insert(0, node(token))
         elif token == ')':
             while not op_queue[0] == '(':
-                root = node(op_queue[0])
-                del op_queue[0]
-                root.right = node_stack[0]
-                del node_stack[0]
-                root.left = node_stack[0]
-                del node_stack[0]
-                node_stack.insert(0,root)
+                combine(op_queue, node_stack)
 
             del op_queue[0]
 
         else:
             while len(op_queue) > 0 and prec[op_queue[0]] >= prec[token]:
-                root = node(op_queue[0])
-                del op_queue[0]
-                root.right = node_stack[0]
-                del node_stack[0]
-                root.left = node_stack[0]
-                del node_stack[0]
-                node_stack.insert(0, root)
+                combine(op_queue, node_stack)
 
-            op_queue.insert(0,token)
+            op_queue.insert(0, token)
 
     while len(node_stack) > 1:
-        root = node(op_queue[0])
-        del op_queue[0]
-        root.right = node_stack[0]
-        del node_stack[0]
-        root.left = node_stack[0]
-        del node_stack[0]
-        node_stack.insert(0, root)
+        combine(op_queue, node_stack)
 
     return node_stack[0]
 
-exp = "((10@5)^2)/3+5"
+
+def combine(operators, nodes):
+    root = node(operators[0])
+    del operators[0]
+    root.right = nodes[0]
+    del nodes[0]
+    root.left = nodes[0]
+    del nodes[0]
+    nodes.insert(0, root)
+
+
+def expresssionErrors(infix):
+    if len(infix) < 1:
+        raise ValueError("Empty expression is prohibited")
+
+    token_list = strToList(infix)
+    for token in range(len(token_list) - 1):
+        if (not token_list[token].isdigit()) and (not token_list[token] in "()+*&^%$@/"):
+            raise ValueError("only numbers and operators allowed")
+
+        if token_list[token] in "(+*&^%$@/" and token_list[token + 1] in "+*&^%$@/":
+            raise ValueError("No Consecutive operators allowed")
+
+    for token in range(len(token_list)):
+        if token_list[token] in "+*&^%$@/" and (token == 0 or token == len(token_list) - 1):
+            raise ValueError("wrong use of binary operators")
+
+
+def strToList(infix):
+    divided = []
+    adder = ""
+    for char in infix:
+        if char.isdigit():
+            adder += char
+        else:
+            if adder != "":
+                divided.append(adder)
+                adder = ""
+            divided.append(char)
+    if adder != "":
+        divided.append(adder)
+    return divided
+
+
+exp = "10+10/2"
+expresssionErrors(exp)
 ans = constructTreeFromInfix(exp)
 print(evaluate(ans))
