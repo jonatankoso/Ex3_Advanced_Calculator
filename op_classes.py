@@ -1,9 +1,15 @@
 MAX_FLOAT = 1.7976931348623157e+308
 class Operator:
-  def __init__(self, isBinary, canComeBefore):
-    self.isBinary = True
-    self.canComeBefore
-    self.canComeAfter
+    def __init__(self, isBinary, canComeBefore, canComeAfter):
+      self.isBinary = isBinary
+      self.canComeBefore = canComeBefore
+      self.canComeAfter = canComeAfter
+
+    def action(self):
+        raise NotImplementedError()
+
+    def possibleErrors(self):
+        raise NotImplementedError()
 
 
 class AddOp:
