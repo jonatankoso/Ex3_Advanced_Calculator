@@ -1,3 +1,6 @@
+import shlex
+
+
 class node:
     def __init__(self, value):
         self.left = None
@@ -12,7 +15,7 @@ def evaluate(node):
     '''
     # if the value is a digit, return it as an integer
     if node.value.isdigit():
-        return int(node.value)
+        return float(node.value)
 
     # else evaluate the left and right subtrees
     if node.left:
@@ -45,9 +48,9 @@ def evaluate(node):
         elif node.value == '*':
             return left_value * right_value
         elif node.value == '/':
-            return left_value // right_value
+            return left_value / right_value
         elif node.value == '^':
-            return right_value ** left_value
+            return left_value ** right_value
         elif node.value == '@':
             return float(right_value + left_value) / 2.0
         elif node.value == '$':
@@ -86,10 +89,17 @@ def constructTree(postfix):
     return t
 
 def constructTreeFromInfix(infix):
-    prec = {'(': 1, '+': 2, '-': 2, '*': 3, '/': 3}
+    prec = {'(': 1, '+': 2, '-': 2, '*': 3, '/': 3, '^':4, '%':5, '@': 6, '$': 6, '&': 6}
     op_queue = []
     node_stack = []
-    for token in infix:
+    lexer = shlex.shlex(infix)
+    tokenList = []
+
+    for token in lexer:
+        tokenList.append(str(token))
+    print(tokenList)
+
+    for token in tokenList:
         if token == '(':
             op_queue.insert(0,token)
         elif token.isdigit():
@@ -129,7 +139,6 @@ def constructTreeFromInfix(infix):
 
     return node_stack[0]
 
-
-exp = "5+5+5+5-5"
+exp = "((10@5)^2)/3+5"
 ans = constructTreeFromInfix(exp)
 print(evaluate(ans))
