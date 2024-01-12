@@ -4,6 +4,11 @@ class node:
         self.value = value
         self.right = None
 
+    def clone(self):
+        n = node(self.value)
+        n.left = None if self.left is None else self.left.clone()
+        n.right = None if self.right is None else self.right.clone()
+        return n
 
 def evaluate(node):
     '''
@@ -87,27 +92,60 @@ def constructTree(postfix):
 
 
 def constructTreeFromInfix(infix):
-    prec = {'(': 1, '+': 2, '-': 2, '*': 3, '/': 3, '^': 4, '%': 5, '@': 6, '$': 6, '&': 6}
+    prec = {'(': 1, '+': 2, '-': 2, '*': 3, '/': 3, '^': 4, '%': 5, '@': 6, '$': 6, '&': 6, '!': 7, '~': 7}
     op_queue = []
     node_stack = []
     tokenList = strToList(infix)
     print(tokenList)
+    open_paren_count = 0
+    last_unary_prefix_seen = None
+
     for token in tokenList:
         if token == '(':
             op_queue.insert(0, token)
+
+            if last_unary_prefix_seen is not None:
+                open_paren_count += 1
         elif token.isdigit():
             node_stack.insert(0, node(token))
+
+            if last_unary_prefix_seen is not None and open_paren_count == 0:
+                # code dup
+                while len(op_queue) > 0 and prec[op_queue[0]] >= prec[last_unary_prefix_seen]:
+                    combine(op_queue, node_stack)
+
+                node_stack.insert(0, node_stack[0].clone())
+                op_queue.insert(0, last_unary_prefix_seen)
+                last_unary_prefix_seen = None
+
         elif token == ')':
             while not op_queue[0] == '(':
                 combine(op_queue, node_stack)
-
             del op_queue[0]
 
+            if last_unary_prefix_seen is not None:
+                open_paren_count -= 1
+
+                if open_paren_count == 0:
+                    # code dup
+                    while len(op_queue) > 0 and prec[op_queue[0]] >= prec[last_unary_prefix_seen]:
+                        combine(op_queue, node_stack)
+
+                    node_stack.insert(0, node_stack[0].clone())
+                    op_queue.insert(0, last_unary_prefix_seen)
+                    last_unary_prefix_seen = None
         else:
             while len(op_queue) > 0 and prec[op_queue[0]] >= prec[token]:
                 combine(op_queue, node_stack)
 
-            op_queue.insert(0, token)
+            if token == '~':
+                last_unary_prefix_seen = token
+                open_paren_count = 0
+            else:
+                if token == '!':
+                    node_stack.insert(0, node_stack[0].clone())
+
+                op_queue.insert(0, token)
 
     while len(node_stack) > 1:
         combine(op_queue, node_stack)
@@ -158,7 +196,7 @@ def strToList(infix):
     return divided
 
 
-exp = "10+10/2"
-expresssionErrors(exp)
+exp = "3*5+(~2*(2+4))"
+#expresssionErrors(exp)
 ans = constructTreeFromInfix(exp)
 print(evaluate(ans))
