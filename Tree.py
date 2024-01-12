@@ -61,6 +61,20 @@ def evaluate(node):
             return min(right_value, left_value)
         elif node.value == '%':
             return right_value % left_value
+        elif node.value == '~':
+            return right_value * -1
+        elif node.value == '#':
+            return sum_of_digits(right_value)
+
+        elif node.value == '!':
+            if right_value >= 0:
+                result = 1
+                for idx in range(1, int(right_value) + 1):
+                    result *= idx
+                return result
+            else:
+                raise ValueError("! is an operation on natural numbers")
+
         else:
             raise ValueError("Wrong sons to operator")
 
@@ -92,7 +106,7 @@ def constructTree(postfix):
 
 
 def constructTreeFromInfix(infix):
-    prec = {'(': 1, '+': 2, '-': 2, '*': 3, '/': 3, '^': 4, '%': 5, '@': 6, '$': 6, '&': 6, '!': 7, '~': 7}
+    prec = {'(': 1, '+': 2, '-': 2, '*': 3, '/': 3, '^': 4, '%': 5, '@': 6, '$': 6, '&': 6, '!': 7, '~': 7, '#': 7}
     op_queue = []
     node_stack = []
     tokenList = strToList(infix)
@@ -142,7 +156,7 @@ def constructTreeFromInfix(infix):
                 last_unary_prefix_seen = token
                 open_paren_count = 0
             else:
-                if token == '!':
+                if token == '!' or token == '#':
                     node_stack.insert(0, node_stack[0].clone())
 
                 op_queue.insert(0, token)
@@ -195,8 +209,14 @@ def strToList(infix):
         divided.append(adder)
     return divided
 
+def sum_of_digits(num):
+    sum = 0
+    while num != 0:
+        sum += int(num%10)
+        num /= 10
+    return sum
 
-exp = "3*5+(~2*(2+4))"
+exp = "23##"
 #expresssionErrors(exp)
 ans = constructTreeFromInfix(exp)
 print(evaluate(ans))
