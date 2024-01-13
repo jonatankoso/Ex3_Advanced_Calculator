@@ -58,6 +58,8 @@ def evaluate(node):
             return right_value * -1
         elif node.value == '#':
             return sum_of_digits(right_value)
+        elif node.value == '_':
+            return 0 - right_value
 
         elif node.value == '!':
             if right_value >= 0:
@@ -106,13 +108,14 @@ def constructTreeFromInfix(infix):
     '''
 
     # Setting precedence of operators
-    prec = {'(': 1, '+': 2, '-': 2, '*': 3, '/': 3, '^': 4, '%': 5, '@': 6, '$': 6, '&': 6, '!': 7, '~': 7, '#': 7}
+    prec = {'(': 1, '+': 2, '-': 2, '*': 3, '/': 3, '^': 4, '%': 5, '@': 6, '$': 6, '&': 6, '_': 7, '!': 7, '~': 7, '#': 7}
     op_queue = []
     node_stack = []
     tokenList = strToList(infix)
     print(tokenList)    # Check for mistakes in converting expression to list
-    open_paren_count = 0
-    last_unary_prefix_seen = None
+    open_paren_count_stack = []
+    last_unary_prefix_seen_stack = []
+    open_operand_count = 0
 
     # check for each one of 4 options for token, '(', number, operator, ')'
     for token in tokenList:
@@ -121,17 +124,24 @@ def constructTreeFromInfix(infix):
             op_queue.insert(0, token)
 
             # Check for parenthesis after ~ (what expression to negate)
-            if last_unary_prefix_seen is not None:
-                open_paren_count += 1
+            if len(open_paren_count_stack) > 0:
+                open_paren_count_stack[0] += 1
 
         # check for 2nd option, if token is number
         elif token.isdigit():
+            open_operand_count += 1
             node_stack.insert(0, node(token))
 
             # if ~ (or any other prefix unary operator) comes before the current expression (number in this case)
-            if last_unary_prefix_seen is not None and open_paren_count == 0:
+            while len(open_paren_count_stack) > 0 and open_paren_count_stack[0] == 0:
                 # code dup
-                last_unary_prefix_seen = insertCloned(op_queue, node_stack, prec, last_unary_prefix_seen)
+                while len(op_queue) > 0 and prec[op_queue[0]] >= prec[last_unary_prefix_seen_stack[0]]:
+                    combine(op_queue, node_stack)
+
+                node_stack.insert(0, node_stack[0].clone())
+                op_queue.insert(0, last_unary_prefix_seen_stack[0])
+                del last_unary_prefix_seen_stack[0]
+                del open_paren_count_stack[0]
 
         # check for 3rd option, ')'
         elif token == ')':
@@ -141,31 +151,48 @@ def constructTreeFromInfix(infix):
             del op_queue[0]
 
             # if any unary operator came before the (, make sure to reduce the number of open parenthesis after it
-            if last_unary_prefix_seen is not None:
-                open_paren_count -= 1
+            if len(open_paren_count_stack) > 0:
+                open_paren_count_stack[0] -= 1
 
                 # if the unary operation needs to be executed on the closed expression
-                if open_paren_count == 0:
+                while len(open_paren_count_stack) > 0 and open_paren_count_stack[0] == 0:
                     # code dup
-                    last_unary_prefix_seen = insertCloned(op_queue, node_stack, prec, last_unary_prefix_seen)
+                    while len(op_queue) > 0 and prec[op_queue[0]] >= prec[last_unary_prefix_seen_stack[0]]:
+                        combine(op_queue, node_stack)
+
+                    node_stack.insert(0, node_stack[0].clone())
+                    op_queue.insert(0, last_unary_prefix_seen_stack[0])
+                    del last_unary_prefix_seen_stack[0]
+                    del open_paren_count_stack[0]
 
         # check for 4th option, operator
         else:
-            # if a new operator with lower precedence is inserted, combine the previous expression
-            while len(op_queue) > 0 and prec[op_queue[0]] >= prec[token]:
-                combine(op_queue, node_stack)
+            # # if a new operator with lower precedence is inserted, combine the previous expression
+            # while len(op_queue) > 0 and prec[op_queue[0]] >= prec[token]:
+            #     combine(op_queue, node_stack)
 
             # special case for prefix unary expressions
-            if token == '~':
-                last_unary_prefix_seen = token
-                open_paren_count = 0
+            if token == '~' or (token == '-' and open_operand_count == 0):
+                if token != '~':
+                    token = '_' # fix to unary minus
+                # if a new operator with lower precedence is inserted, combine the previous expression
+                while len(op_queue) > 0 and prec[op_queue[0]] >= prec[token]:
+                    combine(op_queue, node_stack)
+                last_unary_prefix_seen_stack.insert(0, token)
+                open_paren_count_stack.insert(0, 0)
             # special case for postfix unary expressions
-            else:
-                if token == '!' or token == '#':
-                    node_stack.insert(0, node_stack[0].clone())
-
-                # case for normal operators
+            elif token == '!' or token == '#':
+                # if a new operator with lower precedence is inserted, combine the previous expression
+                while len(op_queue) > 0 and prec[op_queue[0]] >= prec[token]:
+                    combine(op_queue, node_stack)
+                node_stack.insert(0, node_stack[0].clone())
                 op_queue.insert(0, token)
+            else: # binary operator
+                # if a new operator with lower precedence is inserted, combine the previous expression
+                while len(op_queue) > 0 and prec[op_queue[0]] >= prec[token]:
+                    combine(op_queue, node_stack)
+                op_queue.insert(0, token)
+                open_operand_count -= 1
 
     # if any last expression left
     while len(node_stack) > 1:
@@ -236,13 +263,6 @@ def strToList(infix):
         divided.append(adder)
     return divided
 
-def insertCloned(operators, nodes, prec_map, last_unary):
-    while len(operators) > 0 and prec_map[operators[0]] >= prec_map[last_unary]:
-        combine(operators, nodes)
-
-    nodes.insert(0, nodes[0].clone())
-    operators.insert(0, last_unary)
-    return None
 
 def sum_of_digits(num):
     '''
@@ -257,7 +277,8 @@ def sum_of_digits(num):
     return sum
 
 
-exp = "~(5*2+~(3!))"
-expresssionErrors(exp)
+#exp = "(5*2+~3!)!"
+exp = "3"
+#expresssionErrors(exp)
 ans = constructTreeFromInfix(exp)
 print(evaluate(ans))
