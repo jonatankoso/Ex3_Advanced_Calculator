@@ -25,7 +25,7 @@ def evaluate(node):
     :return: result of evaluation
     '''
     # if the value is a digit, return it as an integer
-    if node.value.isdigit():
+    if node.value.isdigit() or is_float(node.value):
         return float(node.value)
 
     # else evaluate the left and right subtrees
@@ -53,16 +53,16 @@ def evaluate(node):
         elif node.value == '&':
             return min(right_value, left_value)
         elif node.value == '%':
-            return right_value % left_value
+            return left_value % right_value
         elif node.value == '~':
             return right_value * -1
         elif node.value == '#':
-            return sum_of_digits(right_value)
+            return sum_of_digits(str(right_value))
         elif node.value == '_':
             return 0 - right_value
 
         elif node.value == '!':
-            if right_value >= 0:
+            if float(right_value).is_integer() and right_value > 0:
                 result = 1
                 for idx in range(1, int(right_value) + 1):
                     result *= idx
@@ -128,7 +128,7 @@ def constructTreeFromInfix(infix):
                 open_paren_count_stack[0] += 1
 
         # check for 2nd option, if token is number
-        elif token.isdigit():
+        elif token.isdigit() or is_float(token):
             open_operand_count += 1
             node_stack.insert(0, node(token))
 
@@ -228,7 +228,7 @@ def expresssionErrors(infix):
 
     token_list = strToList(infix)
     for token in range(len(token_list) - 1):
-        if (not token_list[token].isdigit()) and (not token_list[token] in "()+*&^%$@/!~#"):
+        if (not token_list[token].isdigit()) and (not is_float(token_list[token])) and (not token_list[token] in "()+*&^%$@/!~#-"):
             raise ValueError("only numbers and operators allowed")
 
         if token_list[token] in "(+*&^%$@/~" and token_list[token + 1] in "+*&^%$@/":
@@ -239,7 +239,7 @@ def expresssionErrors(infix):
         if token_list[token] in "+*&^%$@/" and (token == 0 or token == len(token_list) - 1):
             raise ValueError("wrong use of binary operators")
 
-        if (token_list[token] == '~' and token == len(token_list) - 1) or (token_list[token] in '!#' and token == 0):
+        if (token_list[token] in '~-' and token == len(token_list) - 1) or (token_list[token] in '!#' and token == 0):
             raise ValueError("wrong use of unary operators")
 
 
@@ -251,11 +251,20 @@ def strToList(infix):
     '''
     divided = []
     adder = ""
+    numAdded = 0
     for char in infix:
         if char.isdigit():
             adder += char
+            numAdded = 1
+
+        elif char == '.' and numAdded == 1:
+            adder += char
+
         else:
+            numAdded = 0
             if adder != "":
+                if adder[-1] == '.' or adder[0] == '.':
+                    raise ValueError("wrong representation of float number")
                 divided.append(adder)
                 adder = ""
             divided.append(char)
@@ -271,14 +280,26 @@ def sum_of_digits(num):
     :return: sum of the number's digits
     '''
     sum = 0
-    while num != 0:
-        sum += int(num % 10)
-        num /= 10
+    while num != "":
+        if num[-1] == '.':
+            num = num[:-1]
+        sum += int(num[-1])
+        num = num[:-1]
     return sum
 
 
+def is_float(string):
+    try:
+        # Return true if float
+        float(string)
+        return True
+    except ValueError:
+        # Return False if Error
+        return False
+
+
 #exp = "(5*2+~3!)!"
-exp = "3"
-#expresssionErrors(exp)
+exp = "--3!"
+expresssionErrors(exp)
 ans = constructTreeFromInfix(exp)
 print(evaluate(ans))
