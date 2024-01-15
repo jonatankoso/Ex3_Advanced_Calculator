@@ -55,7 +55,7 @@ def evaluate(node):
         elif node.value == '%':
             return left_value % right_value
         elif node.value == '~':
-            return right_value * -1
+            return 0 - right_value
         elif node.value == '#':
             return sum_of_digits(str(right_value))
         elif node.value == '_':
@@ -299,7 +299,7 @@ def is_float(string):
 
 
 #exp = "(5*2+~3!)!"
-exp = "--3!"
+exp = "~-5.1"
 expresssionErrors(exp)
 ans = constructTreeFromInfix(exp)
 print(evaluate(ans))
