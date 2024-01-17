@@ -265,6 +265,9 @@ def expresssionErrors(infix):
     :param infix: string representation of the expression
     :return: none
     '''
+
+    paren_count = 0
+
     if len(infix) < 1:
         raise ValueError("Empty expression is prohibited")
 
@@ -273,16 +276,27 @@ def expresssionErrors(infix):
         if (not token_list[token].isdigit()) and (not is_float(token_list[token])) and (not token_list[token] in "()+*&^%$@/!~#-"):
             raise ValueError("only numbers and operators allowed")
 
-        if token_list[token] in "(+*&^%$@/~" and token_list[token + 1] in "+*&^%$@/":
+        if token_list[token] in "(+*&^%$@/~" and token_list[token + 1] in "+*&^%$@/~" and (
+                token_list[token] != '+' and token_list[token + 1] != '~'):
             raise ValueError(
                 "No Consecutive operators of such kind allowed: " + token_list[token] + " " + token_list[token + 1])
 
     for token in range(len(token_list)):
+        if token_list[token] == '(':
+            paren_count += 1
+        if token_list[token] == ')':
+            paren_count -= 1
+            if paren_count < 0:
+                raise SyntaxError("Wrong parenthesis usage")
+
         if token_list[token] in "+*&^%$@/" and (token == 0 or token == len(token_list) - 1):
             raise ValueError("wrong use of binary operators")
 
         if (token_list[token] in '~-' and token == len(token_list) - 1) or (token_list[token] in '!#' and token == 0):
             raise ValueError("wrong use of unary operators")
+
+    if paren_count != 0:
+        raise SyntaxError("Wrong parenthesis usage")
 
 
 def strToList(infix):
