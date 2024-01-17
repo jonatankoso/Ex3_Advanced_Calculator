@@ -1,3 +1,4 @@
+import utilities
 class node:
     def __init__(self, value):
         '''
@@ -27,7 +28,7 @@ def evaluate(node):
     left_value = 0
     right_value = 0
     # if the value is a digit, return it as an integer
-    if node.value.isdigit() or is_float(node.value):
+    if node.value.isdigit() or utilities.is_float(node.value):
         return float(node.value)
 
     # else evaluate the left and right subtrees
@@ -68,7 +69,7 @@ def evaluate(node):
             return right_value * -1
         elif node.value == '#':
             if left_value >= 0:
-                return sum_of_digits(str(right_value))
+                return utilities.sum_of_digits(str(right_value))
             raise ValueError("# only works on positive numbers")
         elif node.value == '_':
             return 0 - right_value
@@ -100,7 +101,7 @@ def constructTreeFromInfix(infix):
             '#': 7, '_': 8}
     op_queue = []
     node_stack = []
-    tokenList = strToList(infix)
+    tokenList = utilities.strToList(infix)
     print(tokenList)  # Check for mistakes in converting expression to list
     open_paren_count_stack = []
     last_unary_prefix_seen_stack = []
@@ -124,7 +125,7 @@ def constructTreeFromInfix(infix):
                 open_paren_count_stack[0] += 1
 
         # check for 2nd option, if token is number
-        elif token.isdigit() or is_float(token):
+        elif token.isdigit() or utilities.is_float(token):
             tilda_before = False
             minus_before = False
             minus_first_checker = 0
@@ -175,18 +176,18 @@ def constructTreeFromInfix(infix):
                 if token != '~':
                     tilda_before = False
                     if (prev_token == "" or prev_token == '(') or (prev_token in '-_|' and minus_first_checker == 1):
-                        check_for_tilda(tilda_before)
+                        utilities.check_for_tilda(tilda_before)
                         token = '|'  # fix to unary minus (4.5 prec, only comes first or after '(' )
                         minus_before = True
                     else:
                         minus_before = False  ######## if - before operator doesnt work, delete this
                         token = '_'  # fix to unary minus (highest prec, after everything else, number or operator)
-                        check_for_minus(minus_before)
+                        utilities.check_for_minus(minus_before)
                         minus_before = True  ####### continue for if doest work: change this to false
                 else:
-                    check_for_minus(minus_before)
+                    utilities.check_for_minus(minus_before)
                     minus_before = False
-                    check_for_tilda(tilda_before)
+                    utilities.check_for_tilda(tilda_before)
                     tilda_before = True
                     minus_first_checker = 0
                 # if a new operator with lower precedence is inserted, combine the previous expression
@@ -196,9 +197,9 @@ def constructTreeFromInfix(infix):
                 open_paren_count_stack.insert(0, 0)
             # special case for postfix unary expressions
             elif token == '!' or token == '#':
-                check_for_minus(minus_before)
+                utilities.check_for_minus(minus_before)
                 minus_before = False
-                check_for_tilda(tilda_before)
+                utilities.check_for_tilda(tilda_before)
                 tilda_before = False
                 # if a new operator with lower precedence is inserted, combine the previous expression
                 while len(op_queue) > 0 and prec[op_queue[0]] >= prec[token]:
@@ -206,12 +207,12 @@ def constructTreeFromInfix(infix):
                 node_stack.insert(0, node_stack[0].clone())
                 op_queue.insert(0, token)
             else:  # binary operator
-                check_for_minus(minus_before)
+                utilities.check_for_minus(minus_before)
                 if token == '-':  ########## if binary - doesnt work, turn all of the code to false
                     minus_before = True
                 else:
                     minus_before = False
-                check_for_tilda(tilda_before)
+                utilities.check_for_tilda(tilda_before)
                 # if a new operator with lower precedence is inserted, combine the previous expression
                 tilda_before = False
                 while len(op_queue) > 0 and prec[op_queue[0]] >= prec[token]:
@@ -244,23 +245,6 @@ def combine(operators, nodes):
     nodes.insert(0, root)
 
 
-def cleanExpression(infix):
-    for ch in infix:
-        if ch == ' ' or ch == '\t' or ch == '\n':
-            infix = infix.replace(ch, '')
-    return infix
-
-
-def check_for_tilda(is_tilda):
-    if is_tilda:
-        raise SyntaxError("tilda cannot come before an expression")
-
-
-def check_for_minus(is_minus):
-    if is_minus:
-        raise SyntaxError("minus cannot come before an operator")
-
-
 def expresssionErrors(infix):
     '''
     Function finds general mistakes in the expression itself
@@ -273,9 +257,9 @@ def expresssionErrors(infix):
     if len(infix) < 1:
         raise ValueError("Empty expression is prohibited")
 
-    token_list = strToList(infix)
+    token_list = utilities.strToList(infix)
     for token in range(len(token_list) - 1):
-        if (not token_list[token].isdigit()) and (not is_float(token_list[token])) and (
+        if (not token_list[token].isdigit()) and (not utilities.is_float(token_list[token])) and (
         not token_list[token] in "()+*&^%$@/!~#-"):
             raise ValueError("only numbers and operators allowed")
 
@@ -302,71 +286,8 @@ def expresssionErrors(infix):
         raise SyntaxError("Wrong parenthesis usage")
 
 
-def strToList(infix):
-    '''
-    Function converts a string into a list based on operators
-    :param infix: string representation of the expression
-    :return: list representation of the expression conjoined by operators
-    '''
-    divided = []
-    adder = ""
-    numAdded = 0
-    point_added = False
-    for char in infix:
-        if char.isdigit():
-            adder += char
-            numAdded = 1
-
-        elif char == '.' and numAdded == 1:
-            if point_added == True:
-                raise SyntaxError("wrong usage of . in number")
-            adder += char
-            point_added = True
-
-        else:
-            numAdded = 0
-            if adder != "":
-                if adder[-1] == '.' or adder[0] == '.':
-                    raise ValueError("wrong representation of float number")
-                divided.append(adder)
-                adder = ""
-            if infix[-1] == '.' or infix[0] == '.':
-                raise ValueError("wrong representation of float number")
-            divided.append(char)
-            point_added = False
-    if adder != "":
-        divided.append(adder)
-    return divided
-
-
-def sum_of_digits(num):
-    '''
-    Function calculates the sum of digits of a given number.
-    :param num: number to calculate the sum of.
-    :return: sum of the number's digits.
-    '''
-    sum = 0
-    while num != "":
-        if num[-1] == '.':
-            num = num[:-1]
-        sum += int(num[-1])
-        num = num[:-1]
-    return sum
-
-
-def is_float(string):
-    try:
-        # Return true if float
-        float(string)
-        return True
-    except ValueError:
-        # Return False if Error
-        return False
-
-
-# exp = "(5*2+~3!)!"
-exp = "2+--3!"
-exp = cleanExpression(exp)
+exp = "((2+--3!)+10)#"
+exp = utilities.cleanExpression(exp)
 expresssionErrors(exp)
 ans = constructTreeFromInfix(exp)
 print(evaluate(ans))
