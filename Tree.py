@@ -96,11 +96,12 @@ def constructTreeFromInfix(infix):
     '''
 
     # Setting precedence of operators
-    prec = {'(': 1, '+': 2, '-': 2, '*': 3, '/': 3, '^': 4, '|': 4.5, '%': 5, '@': 6, '$': 6, '&': 6, '!': 7, '~': 7, '#': 7, '_': 8}
+    prec = {'(': 1, '+': 2, '-': 2, '*': 3, '/': 3, '^': 4, '|': 4.5, '%': 5, '@': 6, '$': 6, '&': 6, '!': 7, '~': 7,
+            '#': 7, '_': 8}
     op_queue = []
     node_stack = []
     tokenList = strToList(infix)
-    print(tokenList)    # Check for mistakes in converting expression to list
+    print(tokenList)  # Check for mistakes in converting expression to list
     open_paren_count_stack = []
     last_unary_prefix_seen_stack = []
     open_operand_count = 0
@@ -204,7 +205,7 @@ def constructTreeFromInfix(infix):
                     combine(op_queue, node_stack)
                 node_stack.insert(0, node_stack[0].clone())
                 op_queue.insert(0, token)
-            else: # binary operator
+            else:  # binary operator
                 check_for_minus(minus_before)
                 if token == '-':  ########## if binary - doesnt work, turn all of the code to false
                     minus_before = True
@@ -244,8 +245,9 @@ def combine(operators, nodes):
 
 
 def cleanExpression(infix):
-    for ch in ' \t\n':
-        infix = infix.replace(ch, '')
+    for ch in infix:
+        if ch == ' ' or ch == '\t' or ch == '\n':
+            infix = infix.replace(ch, '')
     return infix
 
 
@@ -273,7 +275,8 @@ def expresssionErrors(infix):
 
     token_list = strToList(infix)
     for token in range(len(token_list) - 1):
-        if (not token_list[token].isdigit()) and (not is_float(token_list[token])) and (not token_list[token] in "()+*&^%$@/!~#-"):
+        if (not token_list[token].isdigit()) and (not is_float(token_list[token])) and (
+        not token_list[token] in "()+*&^%$@/!~#-"):
             raise ValueError("only numbers and operators allowed")
 
         if token_list[token] in "(+*&^%$@/~" and token_list[token + 1] in "+*&^%$@/~" and (
@@ -308,13 +311,17 @@ def strToList(infix):
     divided = []
     adder = ""
     numAdded = 0
+    point_added = False
     for char in infix:
         if char.isdigit():
             adder += char
             numAdded = 1
 
         elif char == '.' and numAdded == 1:
+            if point_added == True:
+                raise SyntaxError("wrong usage of . in number")
             adder += char
+            point_added = True
 
         else:
             numAdded = 0
@@ -323,7 +330,10 @@ def strToList(infix):
                     raise ValueError("wrong representation of float number")
                 divided.append(adder)
                 adder = ""
+            if infix[-1] == '.' or infix[0] == '.':
+                raise ValueError("wrong representation of float number")
             divided.append(char)
+            point_added = False
     if adder != "":
         divided.append(adder)
     return divided
@@ -331,9 +341,9 @@ def strToList(infix):
 
 def sum_of_digits(num):
     '''
-    Function calculates the sum of digits of a given number
-    :param num: number to calculate the sum of
-    :return: sum of the number's digits
+    Function calculates the sum of digits of a given number.
+    :param num: number to calculate the sum of.
+    :return: sum of the number's digits.
     '''
     sum = 0
     while num != "":
@@ -354,8 +364,9 @@ def is_float(string):
         return False
 
 
-#exp = "(5*2+~3!)!"
-exp = "2--~3"
+# exp = "(5*2+~3!)!"
+exp = "2+--3!"
+exp = cleanExpression(exp)
 expresssionErrors(exp)
 ans = constructTreeFromInfix(exp)
 print(evaluate(ans))
