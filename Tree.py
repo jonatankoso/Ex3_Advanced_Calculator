@@ -96,7 +96,7 @@ def constructTreeFromInfix(infix):
     '''
 
     # Setting precedence of operators
-    prec = {'(': 1, '+': 2, '-': 2, '*': 3, '/': 3, '^': 4, '%': 5, '@': 6, '$': 6, '&': 6, '_': 7, '!': 7, '~': 7, '#': 7}
+    prec = {'(': 1, '+': 2, '-': 2, '*': 3, '/': 3, '^': 4, '|': 4.5, '%': 5, '@': 6, '$': 6, '&': 6, '!': 7, '~': 7, '#': 7, '_': 8}
     op_queue = []
     node_stack = []
     tokenList = strToList(infix)
@@ -104,11 +104,18 @@ def constructTreeFromInfix(infix):
     open_paren_count_stack = []
     last_unary_prefix_seen_stack = []
     open_operand_count = 0
+    prev_token = ""
+    minus_first_checker = 1
+    tilda_before = False
+    minus_before = False
 
     # check for each one of 4 options for token, '(', number, operator, ')'
     for token in tokenList:
         # check for 1st option, if token is (
         if token == '(':
+            tilda_before = False
+            minus_before = False
+            minus_first_checker = 1
             op_queue.insert(0, token)
 
             # Check for parenthesis after ~ (what expression to negate)
@@ -117,13 +124,17 @@ def constructTreeFromInfix(infix):
 
         # check for 2nd option, if token is number
         elif token.isdigit() or is_float(token):
+            tilda_before = False
+            minus_before = False
+            minus_first_checker = 0
             open_operand_count += 1
             node_stack.insert(0, node(token))
 
             # if ~ (or any other prefix unary operator) comes before the current expression (number in this case)
             while len(open_paren_count_stack) > 0 and open_paren_count_stack[0] == 0:
                 # code dup
-                while len(op_queue) > 0 and prec[op_queue[0]] >= prec[last_unary_prefix_seen_stack[0]]:
+                while (len(op_queue) > 0 and prec[op_queue[0]] >= prec[last_unary_prefix_seen_stack[0]] and op_queue[0]
+                       != last_unary_prefix_seen_stack[0] == '|'):
                     combine(op_queue, node_stack)
 
                 node_stack.insert(0, node_stack[0].clone())
@@ -131,8 +142,11 @@ def constructTreeFromInfix(infix):
                 del last_unary_prefix_seen_stack[0]
                 del open_paren_count_stack[0]
 
-        # check for 3rd option, ')'
+        # check for 3rd option, ")"
         elif token == ')':
+            tilda_before = False
+            minus_before = False
+            minus_first_checker = 0
             # combine the operator and operands into one expression
             while not op_queue[0] == '(':
                 combine(op_queue, node_stack)
@@ -155,32 +169,56 @@ def constructTreeFromInfix(infix):
 
         # check for 4th option, operator
         else:
-            # # if a new operator with lower precedence is inserted, combine the previous expression
-            # while len(op_queue) > 0 and prec[op_queue[0]] >= prec[token]:
-            #     combine(op_queue, node_stack)
-
             # special case for prefix unary expressions
             if token == '~' or (token == '-' and open_operand_count == 0):
                 if token != '~':
-                    token = '_' # fix to unary minus
+                    tilda_before = False
+                    if (prev_token == "" or prev_token == '(') or (prev_token in '-_|' and minus_first_checker == 1):
+                        check_for_tilda(tilda_before)
+                        token = '|'  # fix to unary minus (4.5 prec, only comes first or after '(' )
+                        minus_before = True
+                    else:
+                        minus_before = False  ######## if - before operator doesnt work, delete this
+                        token = '_'  # fix to unary minus (highest prec, after everything else, number or operator)
+                        check_for_minus(minus_before)
+                        minus_before = True  ####### continue for if doest work: change this to false
+                else:
+                    check_for_minus(minus_before)
+                    minus_before = False
+                    check_for_tilda(tilda_before)
+                    tilda_before = True
+                    minus_first_checker = 0
                 # if a new operator with lower precedence is inserted, combine the previous expression
-                while len(op_queue) > 0 and prec[op_queue[0]] >= prec[token]:
+                while len(op_queue) > 0 and prec[op_queue[0]] >= prec[token] and (op_queue[0] != '|' and token != '|'):
                     combine(op_queue, node_stack)
                 last_unary_prefix_seen_stack.insert(0, token)
                 open_paren_count_stack.insert(0, 0)
             # special case for postfix unary expressions
             elif token == '!' or token == '#':
+                check_for_minus(minus_before)
+                minus_before = False
+                check_for_tilda(tilda_before)
+                tilda_before = False
                 # if a new operator with lower precedence is inserted, combine the previous expression
                 while len(op_queue) > 0 and prec[op_queue[0]] >= prec[token]:
                     combine(op_queue, node_stack)
                 node_stack.insert(0, node_stack[0].clone())
                 op_queue.insert(0, token)
             else: # binary operator
+                check_for_minus(minus_before)
+                if token == '-':  ########## if binary - doesnt work, turn all of the code to false
+                    minus_before = True
+                else:
+                    minus_before = False
+                check_for_tilda(tilda_before)
                 # if a new operator with lower precedence is inserted, combine the previous expression
+                tilda_before = False
                 while len(op_queue) > 0 and prec[op_queue[0]] >= prec[token]:
                     combine(op_queue, node_stack)
                 op_queue.insert(0, token)
                 open_operand_count -= 1
+
+        prev_token = token
 
     # if any last expression left
     while len(node_stack) > 1:
@@ -203,6 +241,22 @@ def combine(operators, nodes):
     root.left = nodes[0]
     del nodes[0]
     nodes.insert(0, root)
+
+
+def cleanExpression(infix):
+    for ch in ' \t\n':
+        infix = infix.replace(ch, '')
+    return infix
+
+
+def check_for_tilda(is_tilda):
+    if is_tilda:
+        raise SyntaxError("tilda cannot come before an expression")
+
+
+def check_for_minus(is_minus):
+    if is_minus:
+        raise SyntaxError("minus cannot come before an operator")
 
 
 def expresssionErrors(infix):
