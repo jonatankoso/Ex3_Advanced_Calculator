@@ -284,10 +284,3 @@ def expresssionErrors(infix):
 
     if paren_count != 0:
         raise SyntaxError("Wrong parenthesis usage")
-
-
-exp = "((2+--3!)+10)#"
-exp = utilities.cleanExpression(exp)
-expresssionErrors(exp)
-ans = constructTreeFromInfix(exp)
-print(evaluate(ans))
