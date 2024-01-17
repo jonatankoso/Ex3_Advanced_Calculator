@@ -24,6 +24,8 @@ def evaluate(node):
     function receives a node of the expression tree and recursively evaluates it
     :return: result of evaluation
     '''
+    left_value = 0
+    right_value = 0
     # if the value is a digit, return it as an integer
     if node.value.isdigit() or is_float(node.value):
         return float(node.value)
@@ -36,6 +38,10 @@ def evaluate(node):
 
     # Perform operation based on the operator this node represents
     if node.left and node.right:
+        if isinstance(right_value, complex) or isinstance(left_value, complex):
+            raise TypeError("number cannot be complex")
+        right_value = round(right_value, 10)
+        left_value = round(left_value, 10)
         if node.value == '+':
             return left_value + right_value
         elif node.value == '-':
@@ -45,6 +51,8 @@ def evaluate(node):
         elif node.value == '/':
             return left_value / right_value
         elif node.value == '^':
+            if left_value == 0 and right_value <= 0:
+                raise ZeroDivisionError("0 can only be brought by positive power")
             return left_value ** right_value
         elif node.value == '@':
             return float(right_value + left_value) / 2.0
@@ -53,16 +61,22 @@ def evaluate(node):
         elif node.value == '&':
             return min(right_value, left_value)
         elif node.value == '%':
+            if right_value == 0:
+                raise ValueError("cannot modulo by 0")
             return left_value % right_value
         elif node.value == '~':
-            return 0 - right_value
+            return right_value * -1
         elif node.value == '#':
-            return sum_of_digits(str(right_value))
+            if left_value >= 0:
+                return sum_of_digits(str(right_value))
+            raise ValueError("# only works on positive numbers")
         elif node.value == '_':
+            return 0 - right_value
+        elif node.value == '|':
             return 0 - right_value
 
         elif node.value == '!':
-            if float(right_value).is_integer() and right_value > 0:
+            if float(right_value).is_integer() and right_value >= 0:
                 result = 1
                 for idx in range(1, int(right_value) + 1):
                     result *= idx
@@ -72,32 +86,6 @@ def evaluate(node):
 
         else:
             raise ValueError("Wrong sons to operator")
-
-
-def constructTree(postfix):
-    stack = []
-    for char in postfix:
-        t = node(char)
-        if char in "+*/^$&%@":
-            t1 = stack.pop()
-            t2 = stack.pop()
-            t.right = t1
-            t.left = t2
-        # elif char == '!':
-        #    t.left = stack.pop()
-        # elif char == '~':
-        #    t.right = stack.pop()
-        elif char == '-':
-            if postfix.index(char) == 1:
-                t.right = stack.pop()
-            else:
-                t1 = stack.pop()
-                t2 = stack.pop()
-                t.right = t1
-                t.left = t2
-        stack.append(t)
-    t = stack.pop()
-    return t
 
 
 def constructTreeFromInfix(infix):
@@ -299,7 +287,7 @@ def is_float(string):
 
 
 #exp = "(5*2+~3!)!"
-exp = "~-5.1"
+exp = "2--~3"
 expresssionErrors(exp)
 ans = constructTreeFromInfix(exp)
 print(evaluate(ans))
