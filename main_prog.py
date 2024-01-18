@@ -3,6 +3,11 @@ import utilities
 
 
 def activate_calc(exp: str):
+    """
+    Function runs the functions pre-run of the calculator
+    :param exp: expression to be calculated
+    :return: none
+    """
     exp = utilities.clean_expression(exp)
     Tree.expression_errors(exp)
     ans = Tree.construct_tree_from_infix(exp)
@@ -10,6 +15,10 @@ def activate_calc(exp: str):
 
 
 def main_func():
+    """
+    Function runs the user interface and the calculation function
+    :return: none
+    """
     print("Welcome to Jonathan's calculator!")
     try:
         while True:

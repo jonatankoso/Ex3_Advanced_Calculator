@@ -2,7 +2,7 @@ import utilities
 
 
 class Node:
-    def __init__(self, value):
+    def __init__(self, value: str):
         """
         Function builds a tree node based on given value
         :param value: data of node
@@ -22,9 +22,10 @@ class Node:
         return n
 
 
-def evaluate(node):
+def evaluate(node: Node) -> float:
     """
     function receives a node of the expression tree and recursively evaluates it
+    :param: root node of the tree to evaluate
     :return: result of evaluation
     """
     left_value = 0
@@ -126,7 +127,7 @@ def construct_tree_from_infix(infix: str) -> Node:
             if len(open_paren_count_stack) > 0:
                 open_paren_count_stack[0] += 1
 
-        # check for 2nd option, if token is number
+        # check for 2nd option, if token is a number
         elif token.isdigit() or utilities.is_float(token):
             tilda_before = False
             minus_before = False
