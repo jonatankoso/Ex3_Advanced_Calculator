@@ -1,30 +1,32 @@
 import utilities
-class node:
+
+
+class Node:
     def __init__(self, value):
-        '''
+        """
         Function builds a tree node based on given value
         :param value: data of node
-        '''
+        """
         self.left = None
         self.value = value
         self.right = None
 
     def clone(self):
-        '''
+        """
         Function clones a tree node
         :return: clone of given node
-        '''
-        n = node(self.value)
+        """
+        n = Node(self.value)
         n.left = None if self.left is None else self.left.clone()
         n.right = None if self.right is None else self.right.clone()
         return n
 
 
 def evaluate(node):
-    '''
+    """
     function receives a node of the expression tree and recursively evaluates it
     :return: result of evaluation
-    '''
+    """
     left_value = 0
     right_value = 0
     # if the value is a digit, return it as an integer
@@ -41,8 +43,8 @@ def evaluate(node):
     if node.left and node.right:
         if isinstance(right_value, complex) or isinstance(left_value, complex):
             raise TypeError("number cannot be complex")
-        right_value = round(right_value, 10)
-        left_value = round(left_value, 10)
+        right_value = round(float(right_value), 10)
+        left_value = round(float(left_value), 10)
         if node.value == '+':
             return left_value + right_value
         elif node.value == '-':
@@ -89,20 +91,20 @@ def evaluate(node):
             raise ValueError("Wrong sons to operator")
 
 
-def constructTreeFromInfix(infix):
-    '''
+def construct_tree_from_infix(infix: str) -> Node:
+    """
     Function constructs an expression tree from given equation
     :param infix: str representation of the equation
     :return: expression tree representing the equation
-    '''
+    """
 
     # Setting precedence of operators
     prec = {'(': 1, '+': 2, '-': 2, '*': 3, '/': 3, '^': 4, '|': 4.5, '%': 5, '@': 6, '$': 6, '&': 6, '!': 7, '~': 7,
             '#': 7, '_': 8}
     op_queue = []
     node_stack = []
-    tokenList = utilities.strToList(infix)
-    print(tokenList)  # Check for mistakes in converting expression to list
+    token_list = utilities.str_to_list(infix)
+    print(token_list)  # Check for mistakes in converting expression to list
     open_paren_count_stack = []
     last_unary_prefix_seen_stack = []
     open_operand_count = 0
@@ -112,7 +114,7 @@ def constructTreeFromInfix(infix):
     minus_before = False
 
     # check for each one of 4 options for token, '(', number, operator, ')'
-    for token in tokenList:
+    for token in token_list:
         # check for 1st option, if token is (
         if token == '(':
             tilda_before = False
@@ -130,7 +132,7 @@ def constructTreeFromInfix(infix):
             minus_before = False
             minus_first_checker = 0
             open_operand_count += 1
-            node_stack.insert(0, node(token))
+            node_stack.insert(0, Node(token))
 
             # if ~ (or any other prefix unary operator) comes before the current expression (number in this case)
             while len(open_paren_count_stack) > 0 and open_paren_count_stack[0] == 0:
@@ -180,10 +182,10 @@ def constructTreeFromInfix(infix):
                         token = '|'  # fix to unary minus (4.5 prec, only comes first or after '(' )
                         minus_before = True
                     else:
-                        minus_before = False  ######## if - before operator doesnt work, delete this
+                        minus_before = False  # ####### if - before operator doesnt work, delete this
                         token = '_'  # fix to unary minus (highest prec, after everything else, number or operator)
                         utilities.check_for_minus(minus_before)
-                        minus_before = True  ####### continue for if doest work: change this to false
+                        minus_before = True  # ###### continue for if doest work: change this to false
                 else:
                     utilities.check_for_minus(minus_before)
                     minus_before = False
@@ -208,7 +210,7 @@ def constructTreeFromInfix(infix):
                 op_queue.insert(0, token)
             else:  # binary operator
                 utilities.check_for_minus(minus_before)
-                if token == '-':  ########## if binary - doesnt work, turn all of the code to false
+                if token == '-':  # ######### if binary - doesnt work, turn all the code to false
                     minus_before = True
                 else:
                     minus_before = False
@@ -229,14 +231,14 @@ def constructTreeFromInfix(infix):
     return node_stack[0]
 
 
-def combine(operators, nodes):
-    '''
+def combine(operators: list, nodes: list):
+    """
     Functions merges the operator and it's operands into an expression tree
     :param operators: operators stack (contains recent operators)
     :param nodes: nodes stack (contains recent operands)
     :return: node with the operator as root and the operands as leaves
-    '''
-    root = node(operators[0])
+    """
+    root = Node(operators[0])
     del operators[0]
     root.right = nodes[0]
     del nodes[0]
@@ -245,22 +247,22 @@ def combine(operators, nodes):
     nodes.insert(0, root)
 
 
-def expresssionErrors(infix):
-    '''
+def expression_errors(infix: str):
+    """
     Function finds general mistakes in the expression itself
     :param infix: string representation of the expression
     :return: none
-    '''
+    """
 
     paren_count = 0
 
     if len(infix) < 1:
         raise ValueError("Empty expression is prohibited")
 
-    token_list = utilities.strToList(infix)
+    token_list = utilities.str_to_list(infix)
     for token in range(len(token_list) - 1):
-        if (not token_list[token].isdigit()) and (not utilities.is_float(token_list[token])) and (
-        not token_list[token] in "()+*&^%$@/!~#-"):
+        if ((not token_list[token].isdigit()) and (not utilities.is_float(token_list[token])) and
+                (not token_list[token] in "()+*&^%$@/!~#-")):
             raise ValueError("only numbers and operators allowed")
 
         if token_list[token] in "(+*&^%$@/~" and token_list[token + 1] in "+*&^%$@/~" and (
