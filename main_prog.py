@@ -11,7 +11,7 @@ def activate_calc(exp: str):
     exp = utilities.clean_expression(exp)
     Tree.expression_errors(exp)
     ans = Tree.construct_tree_from_infix(exp)
-    print(Tree.evaluate(ans))
+    return ans
 
 
 def main_func():
@@ -24,7 +24,7 @@ def main_func():
         while True:
             try:
                 exp = input("\nEnter your expression: ")
-                activate_calc(exp)
+                print(Tree.evaluate(activate_calc(exp)))
             except (ValueError, TypeError, SyntaxError, ZeroDivisionError, OverflowError) as er:
                 if isinstance(er, OverflowError):
                     print("Number too big")

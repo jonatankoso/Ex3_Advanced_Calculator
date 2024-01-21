@@ -73,7 +73,7 @@ def evaluate(node: Node) -> float:
         elif node.value == '#':
             if left_value >= 0:
                 return utilities.sum_of_digits(str(right_value))
-            raise ValueError("# only works on positive numbers")
+            raise ValueError("wrong value from #, may contain negative numbers or e")
         elif node.value == '_':
             return 0 - right_value
         elif node.value == '|':
@@ -137,7 +137,6 @@ def construct_tree_from_infix(infix: str) -> Node:
 
             # if ~ (or any other prefix unary operator) comes before the current expression (number in this case)
             while len(open_paren_count_stack) > 0 and open_paren_count_stack[0] == 0:
-                # code dup
                 while (len(op_queue) > 0 and prec[op_queue[0]] >= prec[last_unary_prefix_seen_stack[0]] and op_queue[0]
                        != last_unary_prefix_seen_stack[0] == '|'):
                     combine(op_queue, node_stack)
@@ -163,7 +162,6 @@ def construct_tree_from_infix(infix: str) -> Node:
 
                 # if the unary operation needs to be executed on the closed expression
                 while len(open_paren_count_stack) > 0 and open_paren_count_stack[0] == 0:
-                    # code dup
                     while len(op_queue) > 0 and prec[op_queue[0]] >= prec[last_unary_prefix_seen_stack[0]]:
                         combine(op_queue, node_stack)
 
@@ -188,9 +186,10 @@ def construct_tree_from_infix(infix: str) -> Node:
                         utilities.check_for_minus(minus_before)
                         minus_before = True  # ###### continue for if doest work: change this to false
                 else:
-                    utilities.check_for_minus(minus_before)
-                    minus_before = False
-                    utilities.check_for_tilda(tilda_before)
+                    if prev_token != '-':
+                        utilities.check_for_minus(minus_before)
+                        minus_before = False
+                        utilities.check_for_tilda(tilda_before)
                     tilda_before = True
                     minus_first_checker = 0
                 # if a new operator with lower precedence is inserted, combine the previous expression
@@ -270,6 +269,11 @@ def expression_errors(infix: str):
                 token_list[token] != '+' and token_list[token + 1] != '~'):
             raise ValueError(
                 "No Consecutive operators of such kind allowed: " + token_list[token] + " " + token_list[token + 1])
+
+        if token_list[token] in "!#" and (utilities.is_float(token_list[token+1]) or
+                                          str(token_list[token+1]).isdigit()) and token != 0:
+            raise ValueError(
+                "No Consecutive numbers allowed without operator between ")
 
     for token in range(len(token_list)):
         if token_list[token] == '(':

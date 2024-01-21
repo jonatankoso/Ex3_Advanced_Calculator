@@ -43,6 +43,8 @@ def sum_of_digits(num: str) -> int:
     :return: sum of the number's digits.
     """
     sum_digits = 0
+    if 'e' in num:
+        num = num[:num.index('e')]
     while num != "":
         if num[-1] == '.':
             num = num[:-1]
