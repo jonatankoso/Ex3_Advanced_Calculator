@@ -60,5 +60,5 @@ def test_calc(expression, outcome):
         assert answer == outcome
     except (ValueError, TypeError, SyntaxError, ZeroDivisionError, OverflowError) as er:
         assert str(er) == outcome
-    except (KeyboardInterrupt, EOFError) as exitErr:
+    except EOFError as exitErr:
         assert str(exitErr) == outcome

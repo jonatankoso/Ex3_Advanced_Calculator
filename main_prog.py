@@ -27,7 +27,7 @@ def main_func():
                 print(Tree.evaluate(activate_calc(exp)))
             except (ValueError, TypeError, SyntaxError, ZeroDivisionError, OverflowError) as er:
                 print(er)
-    except (KeyboardInterrupt, EOFError):
+    except EOFError:
         print("\nClosed calculator")
 
 

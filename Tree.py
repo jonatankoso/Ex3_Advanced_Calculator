@@ -111,7 +111,6 @@ def construct_tree_from_infix(infix: str) -> Node:
     op_queue = []
     node_stack = []
     token_list = utilities.str_to_list(infix)
-    print(token_list)  # Check for mistakes in converting expression to list
     open_paren_count_stack = []
     last_unary_prefix_seen_stack = []
     open_operand_count = 0
