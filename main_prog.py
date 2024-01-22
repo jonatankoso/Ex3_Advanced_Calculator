@@ -26,10 +26,7 @@ def main_func():
                 exp = input("\nEnter your expression: ")
                 print(Tree.evaluate(activate_calc(exp)))
             except (ValueError, TypeError, SyntaxError, ZeroDivisionError, OverflowError) as er:
-                if isinstance(er, OverflowError):
-                    print("Number too big")
-                else:
-                    print(er)
+                print(er)
     except (KeyboardInterrupt, EOFError):
         print("\nClosed calculator")
 

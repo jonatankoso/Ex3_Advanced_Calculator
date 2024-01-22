@@ -57,6 +57,10 @@ def evaluate(node: Node) -> float:
         elif node.value == '^':
             if left_value == 0 and right_value <= 0:
                 raise ZeroDivisionError("0 can only be brought by positive power")
+            try:
+                left_value ** right_value
+            except OverflowError:
+                raise OverflowError("Number too big")
             return left_value ** right_value
         elif node.value == '@':
             return float(right_value + left_value) / 2.0
@@ -81,8 +85,10 @@ def evaluate(node: Node) -> float:
 
         elif node.value == '!':
             if float(right_value).is_integer() and right_value >= 0:
-                result = 1
+                result = 1.0
                 for idx in range(1, int(right_value) + 1):
+                    if result == float("inf"):
+                        raise OverflowError("Number too big")
                     result *= idx
                 return result
             else:
